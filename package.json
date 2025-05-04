@@ -9,6 +9,7 @@
   "dependencies": {
     "amqplib": "0.10.7",
     "colors": "~1.4.0",
-    "dotenv": "16.4.7"
+    "dotenv": "16.4.7",
+    "firebase-admin": "^13.3.0"
   }
 }

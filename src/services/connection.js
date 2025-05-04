@@ -1,4 +1,3 @@
-// Versão melhorada da função de conexão com retry
 import amqp from "amqplib";
 import colors from "colors";
 import dotenv from "dotenv";
