@@ -47,7 +47,7 @@ router.get('/health', (req, res) => notificationController.testConnection(req, r
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/SingleNotification'
+ *             $ref: '#/components/schemas/SingleNotificationRequest'
  *     responses:
  *       200:
  *         description: Notificação enviada com sucesso

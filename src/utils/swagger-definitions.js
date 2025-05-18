@@ -61,21 +61,25 @@ export const swaggerDefinitions = {
             description: 'URL opcional para uma imagem a ser exibida na notificação',
           },
         },
-      },
-      Data: {
+      },      Data: {
         type: 'object',
         properties: {
           type: {
             type: 'string',
             description: 'Tipo da notificação (para categorização no cliente)',
+            example: 'message'
           },
           payload: {
             type: 'object',
             description: 'Dados adicionais para serem enviados com a notificação',
+            example: {
+              messageId: 'msg12345',
+              sender: 'Suporte Técnico',
+              timestamp: '2025-05-18T15:00:00Z'
+            }
           },
         },
-      },
-      SingleNotificationRequest: {
+      },SingleNotificationRequest: {
         type: 'object',
         required: ['token', 'notification'],
         properties: {
@@ -90,8 +94,22 @@ export const swaggerDefinitions = {
             $ref: '#/components/schemas/Data',
           },
         },
-      },
-      BulkNotificationRequest: {
+        example: {
+          token: 'c0_upvfUQr62sCIQOfCfrl:APA91bFgN19CkI73zEpcoeY1VjbB2ZbSZrK2xHDPBU3oTMY-0Uet1JVbf1tOAzrEtP08uJrliS2KVd-Vp80_YW2pA_RyKs_YQPz58WZhwJ0xaqJ1Ag4msRE',
+          notification: {
+            title: 'Nova mensagem',
+            body: 'Você recebeu uma nova mensagem de suporte'
+          },
+          data: {
+            type: 'message',
+            payload: {
+              messageId: 'msg12345',
+              sender: 'Suporte Técnico',
+              timestamp: '2025-05-18T15:00:00Z'
+            }
+          }
+        },
+      },      BulkNotificationRequest: {
         type: 'object',
         required: ['tokens', 'notification'],
         properties: {
@@ -108,6 +126,24 @@ export const swaggerDefinitions = {
           data: {
             $ref: '#/components/schemas/Data',
           },
+        },
+        example: {
+          tokens: [
+            'c0_upvfUQr62sCIQOfCfrl:APA91bFgN19CkI73zEpcoeY1VjbB2ZbSZrK2xHDPBU3oTMY-0Uet1JVbf1tOAzrEtP08uJrliS2KVd-Vp80_YW2pA_RyKs_YQPz58WZhwJ0xaqJ1Ag4msRE',
+            'c0_upvfUQr62sCIQOfCfrl:APA91bFgN19CkI73zEpcoeY1VjbB2ZbSZrK2xHDPBU3oTMY-0Uet1JVbf1tOAzrEtP08uJrliS2KVd-Vp80_YW2pA_RyKs_YQPz58WZhwJ0xaqJ1Ag4msRE'
+          ],
+          notification: {
+            title: 'Anúncio Importante',
+            body: 'Atualização do sistema disponível'
+          },
+          data: {
+            type: 'bulk',
+            payload: {
+              updateId: 'update123',
+              priority: 'high',
+              timestamp: '2025-05-18T12:00:00Z'
+            }
+          }
         },
       },
       NotificationResponse: {
