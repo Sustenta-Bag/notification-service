@@ -99,30 +99,46 @@ export const sendBulkNotifications = async (tokens, notification, data) => {
   for (let i = 0; i < tokens.length; i += maxTokensPerRequest) {
     const batch = tokens.slice(i, i + maxTokensPerRequest);
 
-    const messages = batch.map((token) => ({
-      token,
-      notification,
-      data: stringData,
-      android: {
-        priority: "high",
-      },
-      apns: {
-        headers: {
-          "apns-priority": "10",
-        },
-      },
-    }));
-
     try {
-      const response = await admin.messaging().sendAll(messages);
-      successCount += response.successCount;
-      failureCount += response.failureCount;
+      // Since sendMulticast is not available, we'll send messages individually
+      const messageResponses = await Promise.all(
+        batch.map(async (token) => {
+          try {
+            const message = {
+              token,
+              notification,
+              data: stringData,
+              android: {
+                priority: "high",
+              },
+              apns: {
+                headers: {
+                  "apns-priority": "10",
+                },
+              },
+            };
+
+            const response = await admin.messaging().send(message);
+            return { success: true, messageId: response };
+          } catch (err) {
+            console.error(colors.red(`Error sending to token ${token.substring(0, 8)}...`), err);
+            return { success: false, error: err };
+          }
+        })
+      );
+      
+      // Count successes and failures
+      const batchSuccessCount = messageResponses.filter(r => r.success).length;
+      const batchFailureCount = messageResponses.filter(r => !r.success).length;
+      
+      successCount += batchSuccessCount;
+      failureCount += batchFailureCount;
 
       console.log(
         colors.green(
           `Batch ${Math.floor(i / maxTokensPerRequest) + 1} results:`
         ),
-        `Success: ${response.successCount}, Failures: ${response.failureCount}`
+        `Success: ${batchSuccessCount}, Failures: ${batchFailureCount}`
       );
     } catch (error) {
       console.error(

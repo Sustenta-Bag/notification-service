@@ -43,6 +43,7 @@ const PORT = config.server.port;
 const server = app.listen(PORT, () => {
   console.log(colors.green(`RESTful API server running on port ${PORT}`));
   console.log(colors.green(`API documentation available at http://localhost:${PORT}/api`));
+  console.log(colors.green(`Swagger documentation available at http://localhost:${PORT}/api-docs`));
 });
 
 // Handle graceful shutdown

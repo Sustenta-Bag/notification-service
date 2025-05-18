@@ -6,16 +6,23 @@
     "start": "node src/server.js",
     "start:watch": "node --watch src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node comprehensive-notification-test.js"
+    "test:notification": "node comprehensive-notification-test.js",
+    "test:swagger": "node test-swagger.js",
+    "docs": "node -e \"console.log('Swagger docs available at: http://localhost:3000/api-docs')\""
   },
   "dependencies": {
+    "@babel/preset-env": "^7.27.2",
     "amqplib": "0.10.7",
     "colors": "~1.4.0",
     "dotenv": "16.4.7",
     "express": "^4.18.2",
-    "firebase-admin": "^13.3.0"
+    "firebase-admin": "^13.3.0",
+    "supertest": "^7.1.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "node-fetch": "^2.7.0",
     "nodemon": "^3.0.1"
   }
 }

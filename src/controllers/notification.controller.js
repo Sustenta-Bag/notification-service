@@ -1,6 +1,13 @@
 // src/controllers/notification.controller.js
 import NotificationService from "../services/notification.service.js";
 
+/**
+ * @swagger
+ * tags:
+ *   name: Notifications
+ *   description: Endpoints para gerenciamento de notificações
+ */
+
 export default class NotificationController {
   constructor() {
     this.notificationService = new NotificationService();
