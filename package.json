@@ -1,15 +1,21 @@
 {
-  "name": "node-boilerplate",
+  "name": "notification-service",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node src/consumer",
-    "start:watch": "node --watch src/consumer"
+    "start": "node src/server.js",
+    "start:watch": "node --watch src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "node comprehensive-notification-test.js"
   },
   "dependencies": {
     "amqplib": "0.10.7",
     "colors": "~1.4.0",
     "dotenv": "16.4.7",
+    "express": "^4.18.2",
     "firebase-admin": "^13.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }

@@ -1,8 +1,7 @@
-﻿import admin from "firebase-admin";
-import dotenv from "dotenv";
+﻿// src/services/firebase.js
+import admin from "firebase-admin";
 import colors from "colors";
-
-dotenv.config();
+import config from "../config/env.js";
 
 let initialized = false;
 
@@ -10,7 +9,7 @@ export const initializeFirebase = () => {
   if (initialized) return true;
 
   try {
-    const serviceAccountPath = './service-account.json';
+    const serviceAccountPath = config.firebase.serviceAccountPath;
     
     console.log(colors.cyan(`Initializing Firebase Admin SDK using service account: ${serviceAccountPath}`));
     
