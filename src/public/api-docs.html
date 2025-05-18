@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serviço de Notificações API - Documentação</title>
+  <link rel="icon" href="notification-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    
+    .swagger-ui .topbar {
+      background-color: #2c3e50;
+    }
+    
+    .swagger-ui .info .title {
+      color: #2c3e50;
+    }
+    
+    .custom-header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .custom-header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    
+    .custom-header p {
+      margin: 10px 0 0;
+      font-size: 16px;
+    }
+    
+    .custom-footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #f8f9fa;
+      color: #6c757d;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>  <div class="custom-header">
+    <h1>Serviço de Notificações API</h1>
+    <p>Documentação completa da API RESTful para envio de notificações</p>
+    <img src="notification-icon.svg" alt="Notification Icon" style="width: 48px; height: 48px; margin-top: 10px;">
+  </div>
+
+  <div id="swagger-ui"></div>
+
+  <div class="custom-footer">
+    <p>Serviço de Notificações API © 2025 - Documentação gerada com Swagger</p>
+  </div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function() {
+      const ui = SwaggerUIBundle({
+        url: "/api-docs.json",
+        dom_id: "#swagger-ui",
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "BaseLayout",
+        supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
+        validatorUrl: null,
+        defaultModelsExpandDepth: 3,
+        defaultModelExpandDepth: 3,
+      });
+      window.ui = ui;
+    };
+  </script>
+</body>
+</html>

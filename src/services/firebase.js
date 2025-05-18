@@ -1,32 +1,20 @@
+﻿// src/services/firebase.js
 import admin from "firebase-admin";
-import dotenv from "dotenv";
 import colors from "colors";
-
-dotenv.config();
+import config from "../config/env.js";
 
 let initialized = false;
 
-// Initialize Firebase Admin SDK
 export const initializeFirebase = () => {
-  if (initialized) return;
+  if (initialized) return true;
 
   try {
-    // Check for required Firebase configuration
-    if (!process.env.FCM_API_KEY) {
-      console.warn(
-        colors.yellow(
-          "Firebase Cloud Messaging API key not found in environment variables"
-        )
-      );
-      return false;
-    }
-
+    const serviceAccountPath = config.firebase.serviceAccountPath;
+    
+    console.log(colors.cyan(`Initializing Firebase Admin SDK using service account: ${serviceAccountPath}`));
+    
     admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FCM_PROJECT_ID,
-        clientEmail: process.env.FCM_CLIENT_EMAIL,
-        privateKey: process.env.FCM_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      }),
+      credential: admin.credential.cert(serviceAccountPath)
     });
 
     initialized = true;
@@ -44,68 +32,19 @@ export const sendSingleNotification = async (token, notification, data) => {
     console.warn(
       colors.yellow("Firebase not initialized. Skipping notification.")
     );
-    return false;
+    return { success: false, error: "Firebase not initialized" };
   }
-
-  const message = {
-    token,
-    notification,
-    data: data ? convertToStringValues(data) : undefined,
-    android: {
-      priority: "high",
-    },
-    apns: {
-      headers: {
-        "apns-priority": "10",
-      },
-    },
-  };
 
   try {
-    const response = await admin.messaging().send(message);
-    console.log(
-      colors.green(`Successfully sent message to ${token.substring(0, 8)}...`),
-      response
-    );
-    return true;
-  } catch (error) {
-    console.error(
-      colors.red(`Error sending message to ${token.substring(0, 8)}...`),
-      error
-    );
-    throw error;
-  }
-};
+    if (!token) {
+      console.warn(colors.yellow("No device token provided. Skipping notification."));
+      return { success: false, error: "No device token provided" };
+    }
 
-// Send notifications to multiple devices (up to 500 at once)
-export const sendBulkNotifications = async (tokens, notification, data) => {
-  if (!initialized) {
-    console.warn(
-      colors.yellow("Firebase not initialized. Skipping notifications.")
-    );
-    return false;
-  }
-
-  if (!tokens || tokens.length === 0) {
-    console.warn(colors.yellow("No tokens provided for bulk notification."));
-    return false;
-  }
-
-  const stringData = data ? convertToStringValues(data) : undefined;
-
-  // FCM allows a maximum of 500 tokens per request
-  const maxTokensPerRequest = 500;
-  let successCount = 0;
-  let failureCount = 0;
-
-  // Process tokens in batches
-  for (let i = 0; i < tokens.length; i += maxTokensPerRequest) {
-    const batch = tokens.slice(i, i + maxTokensPerRequest);
-
-    const messages = batch.map((token) => ({
+    const message = {
       token,
       notification,
-      data: stringData,
+      data: data ? convertToStringValues(data) : undefined,
       android: {
         priority: "high",
       },
@@ -114,18 +53,92 @@ export const sendBulkNotifications = async (tokens, notification, data) => {
           "apns-priority": "10",
         },
       },
-    }));
+    };
+
+    const response = await admin.messaging().send(message);
+    console.log(
+      colors.green(`Successfully sent message to ${token.substring(0, 8)}...`),
+      response
+    );
+    return { success: true, messageId: response };
+  } catch (error) {
+    console.error(
+      colors.red(`Error sending message to ${token.substring(0, 8)}...`),
+      error
+    );
+    const errorMessage = error.message || "Unknown error";
+    const errorCode = error.code || "unknown";
+    return { 
+      success: false, 
+      error: errorMessage,
+      code: errorCode,
+      details: error.toString()
+    };
+  }
+};
+
+export const sendBulkNotifications = async (tokens, notification, data) => {
+  if (!initialized) {
+    console.warn(
+      colors.yellow("Firebase not initialized. Skipping notifications.")
+    );
+    return { success: false, error: "Firebase not initialized" };
+  }
+
+  if (!tokens || tokens.length === 0) {
+    console.warn(colors.yellow("No tokens provided for bulk notification."));
+    return { success: false, error: "No tokens provided" };
+  }
+
+  const stringData = data ? convertToStringValues(data) : undefined;
+
+  const maxTokensPerRequest = 500;
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (let i = 0; i < tokens.length; i += maxTokensPerRequest) {
+    const batch = tokens.slice(i, i + maxTokensPerRequest);
 
     try {
-      const response = await admin.messaging().sendAll(messages);
-      successCount += response.successCount;
-      failureCount += response.failureCount;
+      // Since sendMulticast is not available, we'll send messages individually
+      const messageResponses = await Promise.all(
+        batch.map(async (token) => {
+          try {
+            const message = {
+              token,
+              notification,
+              data: stringData,
+              android: {
+                priority: "high",
+              },
+              apns: {
+                headers: {
+                  "apns-priority": "10",
+                },
+              },
+            };
+
+            const response = await admin.messaging().send(message);
+            return { success: true, messageId: response };
+          } catch (err) {
+            console.error(colors.red(`Error sending to token ${token.substring(0, 8)}...`), err);
+            return { success: false, error: err };
+          }
+        })
+      );
+      
+      // Count successes and failures
+      const batchSuccessCount = messageResponses.filter(r => r.success).length;
+      const batchFailureCount = messageResponses.filter(r => !r.success).length;
+      
+      successCount += batchSuccessCount;
+      failureCount += batchFailureCount;
 
       console.log(
         colors.green(
           `Batch ${Math.floor(i / maxTokensPerRequest) + 1} results:`
         ),
-        `Success: ${response.successCount}, Failures: ${response.failureCount}`
+        `Success: ${batchSuccessCount}, Failures: ${batchFailureCount}`
       );
     } catch (error) {
       console.error(
@@ -143,10 +156,9 @@ export const sendBulkNotifications = async (tokens, notification, data) => {
       `Bulk notification complete. Success: ${successCount}, Failures: ${failureCount}`
     )
   );
-  return { successCount, failureCount };
+  return { success: true, successCount, failureCount };
 };
 
-// FCM requires all data values to be strings
 const convertToStringValues = (data) => {
   const result = {};
   Object.entries(data).forEach(([key, value]) => {

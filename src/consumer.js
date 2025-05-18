@@ -8,7 +8,16 @@ import {
 } from "./services/firebase.js";
 
 dotenv.config();
-initializeFirebase();
+
+// Initialize Firebase at startup
+console.log(colors.yellow("Initializing Firebase Admin SDK..."));
+const firebaseInitialized = initializeFirebase();
+
+if (!firebaseInitialized) {
+  console.error(colors.red("Failed to initialize Firebase. Please check your service account configuration."));
+  console.error(colors.red("Make sure you have a valid service-account.json file in the root directory."));
+  process.exit(1);
+}
 
 const queue = "process_notification";
 const exchange = "process_notification_exchange";
@@ -18,7 +27,7 @@ const processNotification = async (task) => {
   console.log(colors.yellow("---------=----------"));
   try {
     console.log(colors.cyan("Processando notificação:"), {
-      to: task.to,
+      to: typeof task.to === 'string' ? task.to.substring(0, 16) + '...' : Array.isArray(task.to) ? `${task.to.length} tokens` : 'INVALID',
       title: task.notification?.title,
       type: task.data?.type || "UNKNOWN",
     });
@@ -29,7 +38,7 @@ const processNotification = async (task) => {
     }
 
     // Implementação da lógica para enviar a notificação usando Firebase Cloud Messaging
-    const type = task.data?.type || "single";
+    const type = task.type || task.data?.type || "single";
     let result;
 
     if (type === "single") {
