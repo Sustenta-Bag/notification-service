@@ -53,7 +53,6 @@ export default async (queue, exchange, routingKey, callback) => {
       (message) => {
         const content = message.content.toString();
         const retries = message.properties.headers?.["x-retries"] || 0;
-
         try {
           console.log(colors.green("==> Mensagem recebida:"), content);
           console.log(colors.green("===> Quantidade de tentativas:"), retries);
