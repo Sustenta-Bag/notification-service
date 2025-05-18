@@ -6,9 +6,7 @@
     "start": "node src/server.js",
     "start:watch": "node --watch src/server.js",
     "dev": "nodemon src/server.js",
-    "test:notification": "node comprehensive-notification-test.js",
-    "test:swagger": "node test-swagger.js",
-    "docs": "node -e \"console.log('Swagger docs available at: http://localhost:3000/api-docs')\""
+    "docs": "node -e \"console.log('Swagger docs available at: http://localhost:4409/api-docs')\""
   },
   "dependencies": {
     "@babel/preset-env": "^7.27.2",
