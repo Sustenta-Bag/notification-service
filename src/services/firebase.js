@@ -1,7 +1,6 @@
 ﻿// src/services/firebase.js
 import admin from "firebase-admin";
 import colors from "colors";
-import config from "../config/env.js";
 
 let initialized = false;
 
@@ -9,12 +8,46 @@ export const initializeFirebase = () => {
   if (initialized) return true;
 
   try {
-    const serviceAccountPath = config.firebase.serviceAccountPath;
-    
-    console.log(colors.cyan(`Initializing Firebase Admin SDK using service account: ${serviceAccountPath}`));
-    
+    console.log(
+      colors.cyan(
+        `Initializing Firebase Admin SDK`
+      )
+    );
+
+    // Validate required environment variables
+    const requiredEnvVars = {
+      FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+      FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
+      FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL
+    };
+
+    const missingVars = Object.entries(requiredEnvVars)
+      .filter(([key, value]) => !value)
+      .map(([key]) => key);
+
+    if (missingVars.length > 0) {
+      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+    }
+
+    console.log(colors.cyan(`Environment variables loaded successfully`));
+    console.log(colors.cyan(`Project ID: ${process.env.FIREBASE_PROJECT_ID}`));
+    console.log(colors.cyan(`Client Email: ${process.env.FIREBASE_CLIENT_EMAIL}`));
+
+    const serviceAccount = {
+      type: "service_account",
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      private_key_id: "",
+      private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+      client_id: "",
+      auth_uri: "https://accounts.google.com/o/oauth2/auth",
+      token_uri: "https://oauth2.googleapis.com/token",
+      auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+    };
+
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccountPath)
+      credential: admin.credential.cert(serviceAccount),
+      projectId: process.env.FIREBASE_PROJECT_ID,
     });
 
     initialized = true;
@@ -26,7 +59,6 @@ export const initializeFirebase = () => {
   }
 };
 
-// Send notification to a single device
 export const sendSingleNotification = async (token, notification, data) => {
   if (!initialized) {
     console.warn(
@@ -37,7 +69,9 @@ export const sendSingleNotification = async (token, notification, data) => {
 
   try {
     if (!token) {
-      console.warn(colors.yellow("No device token provided. Skipping notification."));
+      console.warn(
+        colors.yellow("No device token provided. Skipping notification.")
+      );
       return { success: false, error: "No device token provided" };
     }
 
@@ -68,11 +102,11 @@ export const sendSingleNotification = async (token, notification, data) => {
     );
     const errorMessage = error.message || "Unknown error";
     const errorCode = error.code || "unknown";
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: errorMessage,
       code: errorCode,
-      details: error.toString()
+      details: error.toString(),
     };
   }
 };
@@ -100,7 +134,6 @@ export const sendBulkNotifications = async (tokens, notification, data) => {
     const batch = tokens.slice(i, i + maxTokensPerRequest);
 
     try {
-      // Since sendMulticast is not available, we'll send messages individually
       const messageResponses = await Promise.all(
         batch.map(async (token) => {
           try {
@@ -121,16 +154,22 @@ export const sendBulkNotifications = async (tokens, notification, data) => {
             const response = await admin.messaging().send(message);
             return { success: true, messageId: response };
           } catch (err) {
-            console.error(colors.red(`Error sending to token ${token.substring(0, 8)}...`), err);
+            console.error(
+              colors.red(`Error sending to token ${token.substring(0, 8)}...`),
+              err
+            );
             return { success: false, error: err };
           }
         })
       );
-      
-      // Count successes and failures
-      const batchSuccessCount = messageResponses.filter(r => r.success).length;
-      const batchFailureCount = messageResponses.filter(r => !r.success).length;
-      
+
+      const batchSuccessCount = messageResponses.filter(
+        (r) => r.success
+      ).length;
+      const batchFailureCount = messageResponses.filter(
+        (r) => !r.success
+      ).length;
+
       successCount += batchSuccessCount;
       failureCount += batchFailureCount;
 
