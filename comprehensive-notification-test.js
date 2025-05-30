@@ -11,13 +11,12 @@ async function runComprehensiveTest() {
     
     // Step 1: Verify environment variables
     console.log(colors.yellow("\nStep 1: Verifying Firebase Configuration"));
-    
-    const requiredEnvVars = [
-      "FCM_API_KEY", 
-      "FCM_PROJECT_ID", 
-      "FCM_CLIENT_EMAIL", 
-      "FCM_PRIVATE_KEY",
-      "FCM_SENDER_ID"
+      const requiredEnvVars = [
+      "FIREBASE_API_KEY", 
+      "FIREBASE_PROJECT_ID", 
+      "FIREBASE_CLIENT_EMAIL", 
+      "FIREBASE_PRIVATE_KEY",
+      "FIREBASE_MESSAGING_SENDER_ID"
     ];
     
     let missingVars = [];
@@ -32,9 +31,8 @@ async function runComprehensiveTest() {
       process.exit(1);
     }
     
-    console.log(colors.green("✓ All required environment variables are present"));
-    console.log(colors.green(`✓ Using Firebase Project ID: ${process.env.FCM_PROJECT_ID}`));
-    console.log(colors.green(`✓ Using Sender ID: ${process.env.FCM_SENDER_ID}`));
+    console.log(colors.green("✓ All required environment variables are present"));    console.log(colors.green(`✓ Using Firebase Project ID: ${process.env.FIREBASE_PROJECT_ID}`));
+    console.log(colors.green(`✓ Using Sender ID: ${process.env.FIREBASE_MESSAGING_SENDER_ID}`));
     
     // Step 2: Initialize Firebase
     console.log(colors.yellow("\nStep 2: Initializing Firebase Admin SDK"));
@@ -84,7 +82,7 @@ async function runComprehensiveTest() {
       // Analyze error for common issues
       if (result.error.includes("sender")) {
         console.error(colors.red("This appears to be a SenderId mismatch issue."));
-        console.error(colors.red("Check that the FCM_SENDER_ID matches the one in the Flutter app's firebase_options.dart file."));
+        console.error(colors.red("Check that the FIREBASE_MESSAGING_SENDER_ID matches the one in the Flutter app's firebase_options.dart file."));
       } else if (result.error.includes("token")) {
         console.error(colors.red("This appears to be an invalid token issue."));
         console.error(colors.red("Make sure you're using a valid FCM token from the correct Firebase project."));

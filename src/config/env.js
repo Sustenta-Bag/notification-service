@@ -8,11 +8,11 @@ dotenv.config();
 const requiredEnvVars = [
   "RABBITMQ", 
   "MAX_RETRIES",
-  "FCM_API_KEY", 
-  "FCM_PROJECT_ID", 
-  "FCM_CLIENT_EMAIL", 
-  "FCM_PRIVATE_KEY",
-  "FCM_SENDER_ID"
+  "FIREBASE_API_KEY", 
+  "FIREBASE_PROJECT_ID", 
+  "FIREBASE_CLIENT_EMAIL", 
+  "FIREBASE_PRIVATE_KEY",
+  "FIREBASE_MESSAGING_SENDER_ID"
 ];
 
 // Validate required environment variables
@@ -26,20 +26,11 @@ const validateEnv = () => {
   return true;
 };
 
-// Export environment variables
 export default {
   nodeEnv: process.env.NODE_ENV || 'development',
   rabbitmq: {
     url: process.env.RABBITMQ,
     maxRetries: parseInt(process.env.MAX_RETRIES, 10) || 5
-  },
-  firebase: {
-    apiKey: process.env.FCM_API_KEY,
-    projectId: process.env.FCM_PROJECT_ID,
-    clientEmail: process.env.FCM_CLIENT_EMAIL,
-    privateKey: process.env.FCM_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    senderId: process.env.FCM_SENDER_ID,
-    serviceAccountPath: './service-account.json'
   },
   server: {
     port: parseInt(process.env.PORT, 10) || 3000
