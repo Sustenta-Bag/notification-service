@@ -32,8 +32,5 @@ export default {
     url: process.env.RABBITMQ,
     maxRetries: parseInt(process.env.MAX_RETRIES, 10) || 5
   },
-  server: {
-    port: parseInt(process.env.PORT, 10) || 3000
-  },
   validate: validateEnv
 };

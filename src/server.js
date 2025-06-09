@@ -1,7 +1,7 @@
 import colors from "colors";
-import app from './app.js';
 import ConsumerService from './services/rabbitmq/consumer.service.js';
 import config from './config/env.js';
+import { initializeFirebase } from './services/firebase.js';
 
 console.log(colors.rainbow("========================================"));
 console.log(colors.bold.green("  NOTIFICATION SERVICE STARTED"));
@@ -23,37 +23,34 @@ try {
   process.exit(1);
 }
 
+// Initialize Firebase
+console.log(colors.yellow("Initializing Firebase Admin SDK..."));
+const firebaseInitialized = initializeFirebase();
+
+if (!firebaseInitialized) {
+  console.error(colors.red("Failed to initialize Firebase. Please check your service account configuration."));
+  console.error(colors.red("Make sure you have a valid service-account.json file in the root directory."));
+  process.exit(1);
+}
+
 const consumerService = new ConsumerService();
 consumerService.startConsumer()
   .then(() => {
     console.log(colors.green("RabbitMQ consumer started successfully!"));
+    console.log(colors.green("Notification service is ready to process messages via RabbitMQ"));
   })
   .catch(error => {
     console.error(colors.red("Failed to start RabbitMQ consumer:"), error);
     process.exit(1);
   });
 
-const PORT = config.server.port;
-const server = app.listen(PORT, () => {
-  console.log(colors.green(`RESTful API server running on port ${PORT}`));
-  console.log(colors.green(`API documentation available at http://localhost:${PORT}/api`));
-  console.log(colors.green(`Swagger documentation available at http://localhost:${PORT}/api-docs`));
-});
-
 const gracefulShutdown = async (signal) => {
   console.log(
     colors.yellow(`Received ${signal}, gracefully shutting down...`)
   );
   
-  server.close(() => {
-    console.log(colors.green('HTTP server closed.'));
-    process.exit(0);
-  });
-  
-  setTimeout(() => {
-    console.log(colors.red('Could not close connections in time, forcefully shutting down'));
-    process.exit(1);
-  }, 10000);
+  console.log(colors.green('RabbitMQ consumer stopped.'));
+  process.exit(0);
 };
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
