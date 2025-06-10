@@ -26,8 +26,4 @@ ENV NODE_ENV=production
 ENTRYPOINT ["dumb-init", "--"]
 
 # Comando para iniciar a aplicação
-CMD ["node", "src/consumer.js"]
-
-# Define um healthcheck para garantir que a aplicação está funcionando
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD node -e "try { require('http').get('http://localhost:4409/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)); } catch (e) { process.exit(1); }"
+CMD ["node", "src/server.js"]

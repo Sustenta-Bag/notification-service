@@ -1,12 +1,16 @@
 {
   "name": "notification-service",
   "version": "1.0.0",
+  "description": "Simple notification service with Firebase FCM and RabbitMQ",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "start:watch": "node --watch src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "node --watch src/server.js"
   },
+  "keywords": ["notifications", "firebase", "rabbitmq", "fcm"],
+  "author": "Grupo 2",
+  "license": "MIT",
   "dependencies": {
     "amqplib": "0.10.7",
     "colors": "~1.4.0",

@@ -1,134 +1,159 @@
 # Serviço de Notificações
 
-Microserviço RESTful para envio de notificações via Firebase Cloud Messaging (FCM), com integração RabbitMQ.
+Microsserviço simples para envio de notificações push via Firebase Cloud Messaging (FCM) com integração RabbitMQ.
 
-## Características
+## Funcionalidades
 
-- API RESTful com HATEOAS (Hypermedia as the Engine of Application State)
-- Documentação Swagger interativa
-- Integração com Firebase Cloud Messaging (FCM)
-- Processamento individual e em massa de notificações push
-- Consumidor RabbitMQ para processamento assíncrono
-- Tratamento de falhas e retentativas automáticas
+- 🚀 Integração com Firebase Cloud Messaging (FCM)
+- 📨 Suporte a notificações individuais e em massa
+- 🐰 Processamento de filas com RabbitMQ
+- 🔄 Mecanismo de retry automático com backoff exponencial
+- 💀 Dead Letter Queue (DLQ) para mensagens falhadas
+- 🐳 Suporte ao Docker
 
-## Instalação
+## Início Rápido
 
-```powershell
-# Clonar o repositório
-git clone https://github.com/Sustenta-Bag/notification-service.git
-cd notification-service
+### 1. Configuração do Ambiente
 
-# Instalar dependências
-npm install
+Copie o arquivo de ambiente e configure suas variáveis:
 
-# Configurar variáveis de ambiente
+```bash
 cp .env.example .env
-# Edite o arquivo .env com suas configurações
 ```
 
-## Configuração Firebase
+Edite o arquivo `.env` com suas credenciais do Firebase e RabbitMQ.
 
-1. Crie um projeto no [Firebase Console](https://console.firebase.google.com/)
-2. Gere uma nova chave privada do Firebase Admin SDK
-3. Salve o arquivo JSON de credenciais como `service-account.json` na raiz do projeto
-4. Configure as variáveis de ambiente relevantes no arquivo `.env`
+### 2. Instalar Dependências
 
-## Uso
+```bash
+npm install
+```
 
-```powershell
-# Iniciar o serviço em modo de desenvolvimento
+### 3. Executar o Serviço
+
+```bash
+# Desenvolvimento
 npm run dev
 
-# Iniciar o serviço em modo de produção
-npm run start
-
-# Visualizar a documentação
-npm run docs
+# Produção
+npm start
 ```
 
-## Estrutura do Projeto
+### 4. Docker (Opcional)
 
-```
-├── src/
-│   ├── config/               # Configurações do serviço
-│   ├── controllers/          # Controladores da API
-│   ├── middlewares/          # Middlewares Express
-│   ├── models/               # Modelos de dados
-│   ├── services/             # Lógica de negócios
-│   │   ├── firebase.js       # Serviço de integração com Firebase
-│   │   ├── notification.service.js # Processamento de notificações
-│   │   └── rabbitmq/         # Integração com RabbitMQ
-│   ├── routes/               # Rotas da API
-│   ├── utils/                # Utilidades
-│   ├── public/               # Arquivos estáticos
-│   ├── app.js                # Aplicação Express
-│   └── server.js             # Ponto de entrada
-├── service-account.json      # Credenciais do Firebase (não incluído no repo)
-└── .env                      # Variáveis de ambiente (não incluído no repo)
+```bash
+# Build
+docker build -t notification-service .
+
+# Executar
+docker run --env-file .env notification-service
 ```
 
-## Documentação da API
+## Formato das Mensagens
 
-A documentação interativa da API está disponível via Swagger:
-
-- **Swagger UI**: `/api-docs`
-- **Swagger JSON**: `/api-docs.json`
-- **Doc Styled**: `/api`
-
-Para acessar facilmente a documentação:
-
-```powershell
-npm run docs
-```
-
-### Endpoints Principais
-
-- `GET /api/notifications`: Retorna links para todos os endpoints disponíveis
-- `POST /api/notifications`: Enviar notificação individual
-- `POST /api/notifications/bulk`: Enviar notificações em massa
-- `GET /api/notifications/health`: Verificar estado de saúde do serviço
-
-## Formatos das Mensagens
+Envie mensagens para a fila `process_notification` com este formato:
 
 ### Notificação Individual
-
 ```json
 {
-  "token": "c0_upvfUQr62sCIQOfCfrl:APA91bFgN19CkI73zEpcoeY1VjbB2ZbSZrK2xHDPBU3oTMY-0Uet1JVbf1tOAzrEtP08uJrliS2KVd-Vp80_YW2pA_RyKs_YQPz58WZhwJ0xaqJ1Ag4msRE",
+  "to": "token_dispositivo_firebase_aqui",
   "notification": {
-    "title": "Nova mensagem",
-    "body": "Você recebeu uma nova mensagem de suporte"
+    "title": "Título da Notificação",
+    "body": "Corpo da mensagem de notificação"
   },
   "data": {
-    "type": "message",
+    "type": "single",
     "payload": {
-      "messageId": "msg12345",
-      "sender": "Suporte Técnico",
-      "timestamp": "2025-05-18T15:00:00Z"
+      "campo_customizado": "valor_customizado"
     }
   }
 }
 ```
 
 ### Notificação em Massa
-
 ```json
 {
-  "tokens": [
-    "c0_upvfUQr62sCIQOfCfrl:APA91bFgN19CkI73zEpcoeY1VjbB2ZbSZrK2xHDPBU3oTMY-0Uet1JVbf1tOAzrEtP08uJrliS2KVd-Vp80_YW2pA_RyKs_YQPz58WZhwJ0xaqJ1Ag4msRE",
-    "c0_upvfUQr62sCIQOfCfrl:APA91bFgN19CkI73zEpcoeY1VjbB2ZbSZrK2xHDPBU3oTMY-0Uet1JVbf1tOAzrEtP08uJrliS2KVd-Vp80_YW2pA_RyKs_YQPz58WZhwJ0xaqJ1Ag4msRE"
-  ],
+  "to": ["token1", "token2", "token3"],
   "notification": {
-    "title": "Anúncio Importante",
-    "body": "Atualização do sistema disponível"
+    "title": "Notificação em Massa",
+    "body": "Mensagem para múltiplos dispositivos"
   },
   "data": {
     "type": "bulk",
     "payload": {
-      "updateId": "update123",
-      "priority": "high",
-      "timestamp": "2025-05-18T12:00:00Z"
+      "campaign_id": "123"
     }
   }
 }
 ```
+
+## Configuração
+
+| Variável | Descrição | Obrigatório |
+|----------|-----------|-------------|
+| `RABBITMQ` | URL de conexão do RabbitMQ | ✅ |
+| `MAX_RETRIES` | Número máximo de tentativas | ✅ |
+| `FIREBASE_PROJECT_ID` | ID do projeto Firebase | ✅ |
+| `FIREBASE_CLIENT_EMAIL` | Email da conta de serviço Firebase | ✅ |
+| `FIREBASE_PRIVATE_KEY` | Chave privada da conta de serviço Firebase | ✅ |
+
+## Estrutura do Projeto
+
+```
+src/
+├── server.js              # Ponto de entrada principal da aplicação
+└── notification-service.js # Lógica principal de notificações
+```
+
+## Tratamento de Erros
+
+- **Lógica de Retry**: Mensagens são reprocessadas até `MAX_RETRIES` vezes com backoff exponencial
+- **Dead Letter Queue**: Mensagens falhadas após máximo de tentativas são enviadas para `{queue}_dlq`
+- **Shutdown Gracioso**: Limpeza adequada dos recursos em sinais SIGINT/SIGTERM
+
+## Monitoramento
+
+O serviço fornece logs coloridos no console para fácil monitoramento:
+- 🟢 **Verde**: Operações bem-sucedidas
+- 🟡 **Amarelo**: Avisos e tentativas de retry  
+- 🔴 **Vermelho**: Erros e falhas
+- 🔵 **Azul**: Informações e debugging
+
+## Configuração do Firebase
+
+1. Crie um projeto no [Firebase Console](https://console.firebase.google.com/)
+2. Vá para Configurações do Projeto > Contas de Serviço
+3. Clique em "Gerar nova chave privada" 
+4. Baixe o arquivo JSON
+5. Extraia os valores e preencha as variáveis no arquivo `.env`:
+   - `FIREBASE_PROJECT_ID`
+   - `FIREBASE_CLIENT_EMAIL`
+   - `FIREBASE_PRIVATE_KEY`
+
+## Exemplos de Uso
+
+### Enviando Notificação via RabbitMQ
+
+```javascript
+const message = {
+  to: "c0_upvfUQr62sCIQOfCfrl:APA91bFgN19...",
+  notification: {
+    title: "Nova mensagem",
+    body: "Você tem uma nova mensagem!"
+  },
+  data: {
+    type: "single",
+    payload: {
+      messageId: "123",
+      userId: "456"
+    }
+  }
+};
+
+// Publique na fila process_notification
+channel.publish('process_notification_exchange', 'notification', Buffer.from(JSON.stringify(message)));
+```
+
+## Licença
+
+MIT
