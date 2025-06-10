@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:coverage": "npm test -- --coverage"
   },
   "keywords": ["notifications", "firebase", "rabbitmq", "fcm"],
   "author": "Grupo 2",

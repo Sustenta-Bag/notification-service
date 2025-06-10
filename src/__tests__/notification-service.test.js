@@ -19,6 +19,25 @@ describe('convertToStringValues', () => {
     const data = { num: 1, obj: { a: 2 }, str: 'ok' };
     expect(convertToStringValues(data)).toEqual({ num: '1', obj: JSON.stringify({ a: 2 }), str: 'ok' });
   });
+
+  test('handles nested objects', () => {
+    const data = { nested: { b: { c: 3 } } };
+    const result = convertToStringValues(data);
+    expect(result.nested).toBe(JSON.stringify({ b: { c: 3 } }));
+  });
+});
+
+describe('initializeFirebase', () => {
+  test('fails when env vars missing', () => {
+    delete process.env.FIREBASE_PROJECT_ID;
+    delete process.env.FIREBASE_PRIVATE_KEY;
+    delete process.env.FIREBASE_CLIENT_EMAIL;
+    jest.resetModules();
+    return import('../notification-service.js').then(mod => {
+      const ok = mod.initializeFirebase();
+      expect(ok).toBe(false);
+    });
+  });
 });
 
 describe('sendNotification', () => {
@@ -64,6 +83,17 @@ describe('processNotification', () => {
     });
     expect(result.success).toBe(true);
     expect(singleSpy).toHaveBeenCalled();
+  });
+
+  test('processes bulk notification', async () => {
+    const bulkSpy = jest.spyOn(admin.messaging(), 'send').mockResolvedValue('1');
+    const result = await processNotification({
+      to: ['a', 'b'],
+      notification: { title: 'bulk' },
+      data: { type: 'bulk' }
+    });
+    expect(result.success).toBe(true);
+    expect(bulkSpy).toHaveBeenCalledTimes(2);
   });
 
   test('throws on invalid task', async () => {
