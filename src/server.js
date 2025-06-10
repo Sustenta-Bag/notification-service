@@ -1,66 +1,54 @@
 import colors from "colors";
-import ConsumerService from './services/rabbitmq/consumer.service.js';
-import config from './config/env.js';
-import { initializeFirebase } from './services/firebase.js';
+import dotenv from "dotenv";
+import { initializeFirebase, startNotificationService } from './notification-service.js';
+
+dotenv.config();
 
 console.log(colors.rainbow("========================================"));
 console.log(colors.bold.green("  NOTIFICATION SERVICE STARTED"));
 console.log(colors.rainbow("========================================"));
 
-try {
-  config.validate();
-  
-  console.log(colors.blue("Environment information:"));
-  console.log(colors.blue(`- NODE_ENV: ${config.nodeEnv}`));
-  console.log(
-    colors.blue(
-      `- RABBITMQ: ${config.rabbitmq.url.replace(/:\/\/.*:.*@/, "://***:***@")}`
-    )
-  );
-  console.log(colors.blue(`- MAX_RETRIES: ${config.rabbitmq.maxRetries}`));
-} catch (error) {
-  console.error(colors.red(error.message));
+// Validate required environment variables
+const requiredEnvVars = ["RABBITMQ", "MAX_RETRIES", "FIREBASE_PROJECT_ID", "FIREBASE_CLIENT_EMAIL", "FIREBASE_PRIVATE_KEY"];
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error(colors.red(`Missing required environment variables: ${missingEnvVars.join(', ')}`));
   process.exit(1);
 }
+
+console.log(colors.blue("Environment information:"));
+console.log(colors.blue(`- NODE_ENV: ${process.env.NODE_ENV || 'development'}`));
+console.log(colors.blue(`- RABBITMQ: ${process.env.RABBITMQ.replace(/:\/\/.*:.*@/, "://***:***@")}`));
+console.log(colors.blue(`- MAX_RETRIES: ${process.env.MAX_RETRIES}`));
 
 // Initialize Firebase
 console.log(colors.yellow("Initializing Firebase Admin SDK..."));
 const firebaseInitialized = initializeFirebase();
 
 if (!firebaseInitialized) {
-  console.error(colors.red("Failed to initialize Firebase. Please check your service account configuration."));
-  console.error(colors.red("Make sure you have a valid service-account.json file in the root directory."));
+  console.error(colors.red("Failed to initialize Firebase. Check your environment variables."));
   process.exit(1);
 }
 
-const consumerService = new ConsumerService();
-consumerService.startConsumer()
+// Start notification service
+startNotificationService()
   .then(() => {
-    console.log(colors.green("RabbitMQ consumer started successfully!"));
-    console.log(colors.green("Notification service is ready to process messages via RabbitMQ"));
+    console.log(colors.green("Notification service started successfully!"));
+    console.log(colors.green("Ready to process messages via RabbitMQ"));
   })
   .catch(error => {
-    console.error(colors.red("Failed to start RabbitMQ consumer:"), error);
+    console.error(colors.red("Failed to start notification service:"), error);
     process.exit(1);
   });
 
-const gracefulShutdown = async (signal) => {
-  console.log(
-    colors.yellow(`Received ${signal}, gracefully shutting down...`)
-  );
-  
-  console.log(colors.green('RabbitMQ consumer stopped.'));
-  process.exit(0);
-};
-
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-
+// Error handling
 process.on("uncaughtException", (error) => {
   console.error(colors.red("Uncaught exception:"), error);
   process.exit(1);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
-  console.error(colors.red("Unhandled rejection at:"), promise, "reason:", reason);
+  console.error(colors.red("Unhandled rejection:"), reason);
+  process.exit(1);
 });

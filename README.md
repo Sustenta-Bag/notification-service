@@ -1,14 +1,127 @@
-# Serviço de Notificações
+# Notification Service
 
-Microserviço RESTful para envio de notificações via Firebase Cloud Messaging (FCM), com integração RabbitMQ.
+A simple microservice for sending push notifications via Firebase Cloud Messaging (FCM) with RabbitMQ integration.
 
-## Características
+## Features
 
-- API RESTful com HATEOAS (Hypermedia as the Engine of Application State)
-- Documentação Swagger interativa
-- Integração com Firebase Cloud Messaging (FCM)
-- Processamento individual e em massa de notificações push
-- Consumidor RabbitMQ para processamento assíncrono
+- 🚀 Firebase Cloud Messaging (FCM) integration
+- 📨 Single and bulk notification support
+- 🐰 RabbitMQ message queue processing
+- 🔄 Automatic retry mechanism with exponential backoff
+- 💀 Dead Letter Queue (DLQ) for failed messages
+- 🐳 Docker support
+
+## Quick Start
+
+### 1. Environment Setup
+
+Copy the environment file and configure your variables:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your Firebase and RabbitMQ credentials.
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Run the Service
+
+```bash
+# Development
+npm run dev
+
+# Production
+npm start
+```
+
+### 4. Docker (Optional)
+
+```bash
+# Build
+docker build -t notification-service .
+
+# Run
+docker run --env-file .env notification-service
+```
+
+## Message Format
+
+Send messages to the `process_notification` queue with this format:
+
+### Single Notification
+```json
+{
+  "to": "firebase_device_token_here",
+  "notification": {
+    "title": "Notification Title",
+    "body": "Notification message body"
+  },
+  "data": {
+    "type": "single",
+    "payload": {
+      "custom_field": "custom_value"
+    }
+  }
+}
+```
+
+### Bulk Notification
+```json
+{
+  "to": ["token1", "token2", "token3"],
+  "notification": {
+    "title": "Bulk Notification",
+    "body": "Message for multiple devices"
+  },
+  "data": {
+    "type": "bulk",
+    "payload": {
+      "campaign_id": "123"
+    }
+  }
+}
+```
+
+## Configuration
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `RABBITMQ` | RabbitMQ connection URL | ✅ |
+| `MAX_RETRIES` | Maximum retry attempts | ✅ |
+| `FIREBASE_PROJECT_ID` | Firebase project ID | ✅ |
+| `FIREBASE_CLIENT_EMAIL` | Firebase service account email | ✅ |
+| `FIREBASE_PRIVATE_KEY` | Firebase service account private key | ✅ |
+
+## Project Structure
+
+```
+src/
+├── server.js              # Main application entry point
+└── notification-service.js # Core notification logic
+```
+
+## Error Handling
+
+- **Retry Logic**: Messages are retried up to `MAX_RETRIES` times with exponential backoff
+- **Dead Letter Queue**: Failed messages after max retries are sent to `{queue}_dlq`
+- **Graceful Shutdown**: Proper cleanup on SIGINT/SIGTERM signals
+
+## Monitoring
+
+The service provides colored console logging for easy monitoring:
+- 🟢 **Green**: Successful operations
+- 🟡 **Yellow**: Warnings and retry attempts  
+- 🔴 **Red**: Errors and failures
+- 🔵 **Blue**: Information and debugging
+
+## License
+
+MIT
 - Tratamento de falhas e retentativas automáticas
 
 ## Instalação
