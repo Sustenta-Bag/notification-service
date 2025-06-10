@@ -236,4 +236,12 @@ const startNotificationService = async () => {
   }
 };
 
-export { initializeFirebase, startNotificationService };
+export {
+  initializeFirebase,
+  startNotificationService,
+  sendNotification,
+  sendBulkNotifications,
+  convertToStringValues,
+  processNotification,
+  connectRabbitMQ,
+};
