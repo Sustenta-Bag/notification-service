@@ -267,4 +267,100 @@ describe('Notification Service Logic Tests', () => {
       expect(attemptCount).toBeGreaterThan(0);
     });
   });
+
+  // Additional coverage tests
+  describe('Extended Service Tests', () => {  test('should test Firebase service methods - basic', async () => {
+    const firebaseService = await import('../src/services/firebase.service.js');
+    
+    // Test basic functionality
+    expect(firebaseService.default).toBeDefined();
+    expect(typeof firebaseService.default.isInitialized).toBe('function');
+    expect(typeof firebaseService.default.initialize).toBe('function');
+    expect(typeof firebaseService.default.sendNotification).toBe('function');
+    expect(typeof firebaseService.default.sendBulkNotifications).toBe('function');
+    
+    // Test initial state
+    expect(firebaseService.default.isInitialized()).toBe(false);
+    
+    // Test notification sending without expecting specific results
+    const notification = await firebaseService.default.sendNotification(
+      'test-token',
+      { title: 'Test', body: 'Test message' },
+      { extra: 'data' }
+    );
+    expect(notification).toBeDefined();
+    
+    // Test bulk notifications
+    const bulk = await firebaseService.default.sendBulkNotifications(
+      ['token1', 'token2'],
+      { title: 'Bulk', body: 'Bulk message' },
+      { bulk: true }
+    );
+    expect(bulk).toBeDefined();
+  });
+
+    test('should test uninitialized services', async () => {
+      const firebaseService = await import('../src/services/firebase.service.js');
+      
+      // Create new instance for testing uninitialized state
+      const FirebaseServiceClass = Object.getPrototypeOf(firebaseService.default).constructor;
+      const uninitializedService = new FirebaseServiceClass();
+      
+      // Test sendNotification when not initialized
+      const result1 = await uninitializedService.sendNotification('token', { title: 'Test' }, {});
+      expect(result1.success).toBe(false);
+      expect(result1.error).toBe('Firebase not initialized');
+      
+      // Test sendBulkNotifications when not initialized
+      const result2 = await uninitializedService.sendBulkNotifications(['token'], { title: 'Test' }, {});
+      expect(result2.success).toBe(false);
+      expect(result2.error).toBe('Firebase not initialized');
+    });
+
+
+  test('should test config with different environments', async () => {
+    const config = await import('../src/config/index.js');
+    
+    expect(config.default).toBeDefined();
+    expect(config.default.firebase).toBeDefined();
+    expect(config.default.rabbitmq).toBeDefined();
+    
+    // Test config properties
+    expect(typeof config.default.firebase.projectId).toBe('string');
+    expect(typeof config.default.firebase.privateKey).toBe('string');
+    expect(typeof config.default.firebase.clientEmail).toBe('string');
+    expect(typeof config.default.rabbitmq.url).toBe('string');
+    expect(typeof config.default.rabbitmq.queue).toBe('string');
+  });
+
+    test('should test logger functionality', async () => {
+      const logger = await import('../src/utils/logger.js');
+      
+      expect(logger.default).toBeDefined();
+      expect(typeof logger.default.info).toBe('function');
+      expect(typeof logger.default.error).toBe('function');
+      expect(typeof logger.default.success).toBe('function');
+      expect(typeof logger.default.debug).toBe('function');
+      
+      // Test logging methods
+      logger.default.info('Test info message');
+      logger.default.error('Test error message', new Error('test'));
+      logger.default.success('Test success message');
+      logger.default.debug('Test debug message');
+      
+      // Test in different environments
+      const originalNodeEnv = process.env.NODE_ENV;
+      
+      try {
+        process.env.NODE_ENV = 'production';
+        logger.default.debug('Debug in production');
+        
+        process.env.NODE_ENV = 'development';
+        logger.default.debug('Debug in development');
+        
+      } finally {
+        process.env.NODE_ENV = originalNodeEnv;
+      }
+    });
+  });
 });
