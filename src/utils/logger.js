@@ -40,19 +40,25 @@ class Logger {
     console.log(colors.bold.green(`  ${text}`));
     this.separator();
   }
-
-  // Specific methods for notification processing
+  
   processingStart(task) {
     this.separator();
-    this.info("Processing notification:", {
+
+    const logData = {
       to: typeof task.to === 'string' 
         ? task.to.substring(0, 16) + '...' 
         : Array.isArray(task.to) 
           ? `${task.to.length} tokens` 
           : 'INVALID',
       title: task.notification?.title,
-      type: task.data?.type || "single",
-    });
+      type: task.type || (Array.isArray(task.to) ? "bulk" : "single"),
+    };
+
+    if (task.userId) {
+      logData.userId = task.userId;
+    }
+
+    this.info("Processing notification:", logData);
   }
 
   processingSuccess(task, type) {

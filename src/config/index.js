@@ -19,7 +19,7 @@ class Config {
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
     };
   }
-
+  
   // RabbitMQ configuration
   get rabbitmq() {
     return {
@@ -28,7 +28,10 @@ class Config {
       queue: "process_notification",
       exchange: "process_notification_exchange",
       routingKey: "notification",
-      dlqSuffix: "_dlq"
+      dlqSuffix: "_dlq",
+      exchanges: {
+        notifications: "notifications"
+      }
     };
   }
 
